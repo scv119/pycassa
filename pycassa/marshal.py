@@ -2,6 +2,12 @@
 Tools for marshalling and unmarshalling data stored
 in Cassandra.
 """
+from __future__ import division
+from builtins import zip
+from builtins import map
+from builtins import str
+from past.builtins import basestring
+from past.utils import old_div
 
 import uuid
 import struct
@@ -11,7 +17,7 @@ from decimal import Decimal
 
 import pycassa.util as util
 
-_number_types = frozenset((int, long, float))
+_number_types = frozenset((int, int, float))
 
 
 def make_packer(fmt_string):
@@ -60,30 +66,30 @@ def _get_inner_types(typestr):
     """ Given a str like 'org.apache...CompositeType(LongType, DoubleType)',
     return a tuple of the inner types, like ('LongType', 'DoubleType') """
     internal_str = _get_inner_type(typestr)
-    return map(str.strip, internal_str.split(','))
+    return list(map(str.strip, internal_str.split(',')))
 
 def _get_composite_name(typestr):
-    types = map(extract_type_name, _get_inner_types(typestr))
+    types = list(map(extract_type_name, _get_inner_types(typestr)))
     return "CompositeType(" + ", ".join(types) + ")"
 
 def _to_timestamp(v):
     # Expects Value to be either date or datetime
     try:
         converted = calendar.timegm(v.utctimetuple())
-        converted = converted * 1e3 + getattr(v, 'microsecond', 0) / 1e3
+        converted = converted * 1e3 + old_div(getattr(v, 'microsecond', 0), 1e3)
     except AttributeError:
         # Ints and floats are valid timestamps too
         if type(v) not in _number_types:
             raise TypeError('DateType arguments must be a datetime or timestamp')
 
         converted = v * 1e3
-    return long(converted)
+    return int(converted)
 
 def get_composite_packer(typestr=None, composite_type=None):
     assert (typestr or composite_type), "Must provide typestr or " + \
             "CompositeType instance"
     if typestr:
-        packers = map(packer_for, _get_inner_types(typestr))
+        packers = list(map(packer_for, _get_inner_types(typestr)))
     elif composite_type:
         packers = [c.pack for c in composite_type.components]
 
@@ -122,7 +128,7 @@ def get_composite_unpacker(typestr=None, composite_type=None):
     assert (typestr or composite_type), "Must provide typestr or " + \
             "CompositeType instance"
     if typestr:
-        unpackers = map(unpacker_for, _get_inner_types(typestr))
+        unpackers = list(map(unpacker_for, _get_inner_types(typestr)))
     elif composite_type:
         unpackers = [c.unpack for c in composite_type.components]
 
@@ -135,7 +141,7 @@ def get_composite_unpacker(typestr=None, composite_type=None):
         components = []
         i = iter(unpackers)
         while bytestr:
-            unpacker = i.next()
+            unpacker = next(i)
             length = len_unpacker(bytestr[:2])
             components.append(unpacker(bytestr[2:2 + length]))
             bytestr = bytestr[3 + length:]
@@ -340,7 +346,7 @@ def unpacker_for(typestr):
 
     elif data_type in ('DateType', 'TimestampType'):
         return lambda v: datetime.utcfromtimestamp(
-                _long_packer.unpack(v)[0] / 1e3)
+                old_div(_long_packer.unpack(v)[0], 1e3))
 
     elif data_type == 'BooleanType':
         return lambda v: bool(_bool_packer.unpack(v)[0])

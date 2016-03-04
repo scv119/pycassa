@@ -1,3 +1,4 @@
+from builtins import map
 from pycassa.columnfamily import *
 from pycassa.columnfamilymap import *
 from pycassa.index import *

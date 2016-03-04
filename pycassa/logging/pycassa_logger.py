@@ -1,4 +1,5 @@
 """ Logging facilities for pycassa. """
+from builtins import object
 
 import logging
 
@@ -13,7 +14,7 @@ levels = {'debug': logging.DEBUG,
 _DEFAULT_LOGGER_NAME = 'pycassa'
 _DEFAULT_LEVEL = 'info'
 
-class PycassaLogger:
+class PycassaLogger(object):
     """
     The root logger for pycassa.
 

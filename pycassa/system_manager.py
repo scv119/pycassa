@@ -1,3 +1,6 @@
+from builtins import str
+from past.builtins import basestring
+from builtins import object
 import time
 
 from pycassa.connection import (Connection, default_socket_factory,
@@ -200,7 +203,7 @@ class SystemManager(object):
                       cf_defs=[],
                       durable_writes=durable_writes)
 
-        for k, v in ks_kwargs.iteritems():
+        for k, v in ks_kwargs.items():
             setattr(ksdef, k, v)
 
         self._system_add_keyspace(ksdef)
@@ -235,7 +238,7 @@ class SystemManager(object):
         if durable_writes is not None:
             ksdef.durable_writes = durable_writes
 
-        for k, v in ks_kwargs.iteritems():
+        for k, v in ks_kwargs.items():
             setattr(ksdef, k, v)
 
         self._system_update_keyspace(ksdef)
@@ -270,12 +273,12 @@ class SystemManager(object):
         if cf_kwargs.pop('super', False):
             cf_kwargs.setdefault('column_type', 'Super')
 
-        for k, v in cf_kwargs.iteritems():
+        for k, v in cf_kwargs.items():
             v = self._convert_class_attrs(k, v)
             setattr(cfdef, k, v)
 
         if column_validation_classes:
-            for (colname, value_type) in column_validation_classes.items():
+            for (colname, value_type) in list(column_validation_classes.items()):
                 cfdef = self._alter_column_cfdef(cfdef, colname, value_type)
 
         self._system_add_column_family(cfdef)
@@ -293,12 +296,12 @@ class SystemManager(object):
         self._conn.set_keyspace(keyspace)
         cfdef = self.get_keyspace_column_families(keyspace)[column_family]
 
-        for k, v in cf_kwargs.iteritems():
+        for k, v in cf_kwargs.items():
             v = self._convert_class_attrs(k, v)
             setattr(cfdef, k, v)
 
         if column_validation_classes:
-            for (colname, value_type) in column_validation_classes.items():
+            for (colname, value_type) in list(column_validation_classes.items()):
                 cfdef = self._alter_column_cfdef(cfdef, colname, value_type)
 
         self._system_update_column_family(cfdef)
@@ -446,7 +449,7 @@ class SystemManager(object):
             versions = self._conn.describe_schema_versions()
 
             # ignore unreachable nodes
-            live_versions = [key for key in versions.keys() if key != 'UNREACHABLE']
+            live_versions = [key for key in list(versions.keys()) if key != 'UNREACHABLE']
 
             if len(live_versions) == 1:
                 break

@@ -77,6 +77,7 @@ or when sending it:
     >>> b.send(atomic=True)
 
 """
+from builtins import object
 
 import threading
 from pycassa.cassandra.ttypes import (ConsistencyLevel, Deletion, Mutation, SlicePredicate)

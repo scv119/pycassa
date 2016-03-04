@@ -1,4 +1,8 @@
 """ Connection pooling for Cassandra connections. """
+from __future__ import absolute_import
+from future import standard_library
+standard_library.install_aliases()
+from builtins import object
 
 from __future__ import with_statement
 
@@ -11,15 +15,15 @@ import sys
 if 'gevent.monkey' in sys.modules:
     from gevent import queue as Queue
 else:
-    import Queue  # noqa
+    import queue  # noqa
 
 from thrift import Thrift
 from thrift.transport.TTransport import TTransportException
-from connection import (Connection, default_socket_factory,
+from .connection import (Connection, default_socket_factory,
         default_transport_factory)
-from logging.pool_logger import PoolLogger
-from util import as_interface
-from cassandra.ttypes import TimedOutException, UnavailableException
+from .logging.pool_logger import PoolLogger
+from .util import as_interface
+from .cassandra.ttypes import TimedOutException, UnavailableException
 
 _BASE_BACKOFF = 0.01
 
@@ -134,7 +138,7 @@ class ConnectionWrapper(Connection):
                 raise
             except (TimedOutException, UnavailableException,
                     TTransportException,
-                    socket.error, IOError, EOFError), exc:
+                    socket.error, IOError, EOFError) as exc:
                 self._pool._notify_on_failure(exc, server=self.server, connection=self)
 
                 self.close()
@@ -340,7 +344,7 @@ class ConnectionPool(object):
             self._tlocal = threading.local()
 
         self._pool_size = pool_size
-        self._q = Queue.Queue(pool_size)
+        self._q = queue.Queue(pool_size)
         self._pool_lock = threading.Lock()
         self._current_conns = 0
 
@@ -423,7 +427,7 @@ class ConnectionPool(object):
                 server = self._get_next_server()
                 wrapper = self._get_new_wrapper(server)
                 return wrapper
-            except (TTransportException, socket.error, IOError, EOFError), exc:
+            except (TTransportException, socket.error, IOError, EOFError) as exc:
                 self._notify_on_failure(exc, server)
                 failure_count += 1
         raise AllServersUnavailable('An attempt was made to connect to each of the servers ' +
@@ -460,7 +464,7 @@ class ConnectionPool(object):
 
             try:
                 self._q.put(conn, False)
-            except Queue.Full:
+            except queue.Full:
                 conn._dispose_wrapper(reason="pool is already full")
             else:
                 with self._pool_lock:
@@ -497,7 +501,7 @@ class ConnectionPool(object):
 
             try:
                 self._q.put_nowait(conn)
-            except Queue.Full:
+            except queue.Full:
                 conn._dispose_wrapper(reason="pool is already full")
                 self._decrement_overflow()
     return_conn = put
@@ -549,7 +553,7 @@ class ConnectionPool(object):
 
             try:
                 conn = self._q.get(timeout=timeout)
-            except Queue.Empty:
+            except queue.Empty:
                 self._notify_on_pool_max(pool_max=self._max_conns)
                 size_msg = "size %d" % (self._pool_size, )
                 if self._overflow_enabled:
@@ -587,7 +591,7 @@ class ConnectionPool(object):
                 conn._dispose_wrapper(
                         reason="Pool %s is being disposed" % id(self))
                 self._decrement_overflow()
-            except Queue.Empty:
+            except queue.Empty:
                 break
 
         self._notify_on_pool_dispose()

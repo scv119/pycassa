@@ -20,6 +20,11 @@ be defined as follows:
     ...        return int(strval)
 
 """
+from __future__ import division
+from builtins import map
+from builtins import str
+from past.utils import old_div
+from builtins import object
 
 import calendar
 from datetime import datetime
@@ -157,14 +162,14 @@ def _to_timestamp(v, use_micros=False):
     try:
         converted = calendar.timegm(v.utctimetuple())
         converted = (converted * scale) + \
-                    (getattr(v, 'microsecond', 0) / micro_scale)
+                    (old_div(getattr(v, 'microsecond', 0), micro_scale))
     except AttributeError:
         # Ints and floats are valid timestamps too
         if type(v) not in marshal._number_types:
             raise TypeError('DateType arguments must be a datetime or timestamp')
 
         converted = v * scale
-    return long(converted)
+    return int(converted)
 
 class OldPycassaDateType(CassandraType):
     """
@@ -190,7 +195,7 @@ class OldPycassaDateType(CassandraType):
 
     @staticmethod
     def unpack(v):
-        ts = marshal._long_packer.unpack(v)[0] / 1e6
+        ts = old_div(marshal._long_packer.unpack(v)[0], 1e6)
         return datetime.utcfromtimestamp(ts)
 
 class IntermediateDateType(CassandraType):
@@ -223,13 +228,13 @@ class IntermediateDateType(CassandraType):
 
     @staticmethod
     def unpack(v):
-        raw_ts = marshal._long_packer.unpack(v)[0] / 1e3
+        raw_ts = old_div(marshal._long_packer.unpack(v)[0], 1e3)
 
         try:
             return datetime.utcfromtimestamp(raw_ts)
         except ValueError:
             # convert from bad microsecond format to millis
-            corrected_ts = raw_ts / 1e3
+            corrected_ts = old_div(raw_ts, 1e3)
             return datetime.utcfromtimestamp(corrected_ts)
 
 class CompositeType(CassandraType):
@@ -286,7 +291,7 @@ class DynamicCompositeType(CassandraType):
 
     def __str__(self):
         aliases = []
-        for k, v in self.aliases.iteritems():
+        for k, v in self.aliases.items():
             aliases.append(k + '=>' + str(v))
         return "DynamicCompositeType(" + ", ".join(aliases) + ")"
 

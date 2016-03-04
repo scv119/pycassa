@@ -1,4 +1,7 @@
-import pycassa_logger
+from __future__ import absolute_import
+from builtins import str
+from builtins import object
+from . import pycassa_logger
 import logging
 
 class PoolLogger(object):
