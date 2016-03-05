@@ -11,7 +11,11 @@ from builtins import object
 
 import time
 import struct
-from UserDict import DictMixin
+try:
+    from UserDict import DictMixin
+except ImportError:
+    from collections import MutableMapping as DictMixin
+
 
 from pycassa.cassandra.ttypes import Column, ColumnOrSuperColumn,\
     ColumnParent, ColumnPath, ConsistencyLevel, NotFoundException,\

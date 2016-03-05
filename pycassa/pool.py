@@ -1,10 +1,10 @@
 """ Connection pooling for Cassandra connections. """
 from __future__ import absolute_import
+from __future__ import with_statement
 from future import standard_library
 standard_library.install_aliases()
 from builtins import object
 
-from __future__ import with_statement
 
 import time
 import threading

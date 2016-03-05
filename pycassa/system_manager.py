@@ -1,3 +1,4 @@
+from __future__ import absolute_import
 from builtins import str
 from past.builtins import basestring
 from builtins import object
@@ -7,8 +8,8 @@ from pycassa.connection import (Connection, default_socket_factory,
         default_transport_factory)
 from pycassa.cassandra.ttypes import IndexType, KsDef, CfDef, ColumnDef,\
                                      SchemaDisagreementException
-import pycassa.marshal as marshal
-import pycassa.types as types
+from . import marshal as marshal
+from . import types as types
 
 _DEFAULT_TIMEOUT = 30
 _SAMPLE_PERIOD = 0.25
